@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS financial_records (
   CONSTRAINT valid_type CHECK (type IN ('income', 'expense'))
 );
 
--- Create indexes for better query performance
+-- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_financial_records_user_id ON financial_records(user_id);
 CREATE INDEX IF NOT EXISTS idx_financial_records_date ON financial_records(transaction_date);
 CREATE INDEX IF NOT EXISTS idx_financial_records_category ON financial_records(category);
@@ -45,7 +45,7 @@ async function runMigrations() {
   }
 }
 
-// Allow running directly: node src/db/migrations.js
+// Allow running directly: node src/db/migrations.js  /  npm run migrate
 if (require.main === module) {
   runMigrations()
     .then(() => process.exit(0))
