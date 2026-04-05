@@ -94,10 +94,10 @@ const getMonthlyTrends = async (userId, months = 12) => {
       COUNT(*) as transaction_count
     FROM financial_records
     WHERE user_id = $1 
-      AND transaction_date >= CURRENT_DATE - INTERVAL '${months} months'
+      AND transaction_date >= CURRENT_DATE - make_interval(months => $2)
     GROUP BY DATE_TRUNC('month', transaction_date)
     ORDER BY month DESC`,
-    [userId]
+    [userId, parseInt(months)]
   );
 
   return result.rows.map(row => ({
