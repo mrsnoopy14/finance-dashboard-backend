@@ -83,13 +83,13 @@ curl -H "Authorization: Bearer <token>" http://localhost:3000/api/users
 
 ## API Endpoints
 
-### Auth (public, no token needed)
+### Auth
 
-| Method | Route | Description |
-|--------|-------|-------------|
-| POST | /api/auth/register | Create account, returns JWT |
-| POST | /api/auth/login | Login, returns JWT |
-| GET | /api/auth/me | Get own user info (token required) |
+| Method | Route | Auth required? | Description |
+|--------|-------|----------------|-------------|
+| POST | /api/auth/register | No | Create account, returns JWT |
+| POST | /api/auth/login | No | Login, returns JWT |
+| GET | /api/auth/me | Yes | Get your own profile |
 
 ### Users (admin only)
 
