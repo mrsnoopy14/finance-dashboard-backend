@@ -449,7 +449,32 @@ All errors follow a consistent format:
 
 ## Testing
 
-Basic curl examples for testing the API:
+The project includes **38 unit and integration tests** using Jest + Supertest (no database required — DB is mocked).
+
+```bash
+# Run all tests
+npm test
+
+# Unit tests only (middleware + validation schemas)
+npm run test:unit
+
+# Integration tests only (auth routes + access control)
+npm run test:integration
+```
+
+### Test Coverage
+
+| Suite | Tests | What is tested |
+|---|---|---|
+| `auth.middleware.test.js` | 8 | JWT verify, expired tokens, role authorization |
+| `validation.schemas.test.js` | 18 | Joi schemas for users, records, login, queries |
+| `auth.routes.test.js` | 12 | Register, login, error cases, protected routes |
+
+### Manual curl Testing
+
+See [API-TESTING.md](API-TESTING.md) for full curl examples.
+
+Quick example:
 
 ```bash
 # Create a test user
