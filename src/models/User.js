@@ -23,29 +23,30 @@ const createUser = async (name, email, password, role = 'viewer') => {
   }
 };
 
-// Get user by ID (no password hash)
+// Get user by ID — excludes soft-deleted users
 const getUserById = async (userId) => {
   const result = await pool.query(
-    `SELECT id, name, email, role, status, created_at, updated_at FROM users WHERE id = $1`,
+    `SELECT id, name, email, role, status, created_at, updated_at FROM users WHERE id = $1 AND deleted_at IS NULL`,
     [userId]
   );
   return result.rows[0];
 };
 
-// Get user by email including password hash (for login)
+// Get user by email including password hash (for login) — excludes soft-deleted
 const getUserByEmail = async (email) => {
   const result = await pool.query(
-    `SELECT id, name, email, role, status, password_hash FROM users WHERE email = $1`,
+    `SELECT id, name, email, role, status, password_hash FROM users WHERE email = $1 AND deleted_at IS NULL`,
     [email]
   );
   return result.rows[0];
 };
 
-// Get all users (admin only)
+// Get all users (admin only) — excludes soft-deleted
 const getAllUsers = async (limit = 50, offset = 0) => {
   const result = await pool.query(
     `SELECT id, name, email, role, status, created_at, updated_at 
      FROM users 
+     WHERE deleted_at IS NULL
      ORDER BY created_at DESC 
      LIMIT $1 OFFSET $2`,
     [limit, offset]
@@ -90,10 +91,12 @@ const updateUser = async (userId, updates) => {
   return result.rows[0];
 };
 
-// Delete user
+// Soft delete user — sets deleted_at instead of removing the row
 const deleteUser = async (userId) => {
   const result = await pool.query(
-    `DELETE FROM users WHERE id = $1 RETURNING id`,
+    `UPDATE users SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+     WHERE id = $1 AND deleted_at IS NULL
+     RETURNING id`,
     [userId]
   );
 
@@ -104,9 +107,9 @@ const deleteUser = async (userId) => {
   return { success: true, message: 'User deleted successfully' };
 };
 
-// Get user count
+// Get user count (excludes soft-deleted)
 const getUserCount = async () => {
-  const result = await pool.query('SELECT COUNT(*) as count FROM users');
+  const result = await pool.query('SELECT COUNT(*) as count FROM users WHERE deleted_at IS NULL');
   return parseInt(result.rows[0].count);
 };
 

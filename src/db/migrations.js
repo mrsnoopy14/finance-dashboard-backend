@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
   role VARCHAR(50) NOT NULL DEFAULT 'viewer',
   status VARCHAR(20) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP DEFAULT NULL
 );
 
 -- Financial records table
@@ -24,6 +25,7 @@ CREATE TABLE IF NOT EXISTS financial_records (
   transaction_date DATE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP DEFAULT NULL,
   CONSTRAINT valid_type CHECK (type IN ('income', 'expense'))
 );
 
@@ -32,6 +34,10 @@ CREATE INDEX IF NOT EXISTS idx_financial_records_user_id ON financial_records(us
 CREATE INDEX IF NOT EXISTS idx_financial_records_date ON financial_records(transaction_date);
 CREATE INDEX IF NOT EXISTS idx_financial_records_category ON financial_records(category);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+
+-- Add deleted_at to existing tables if upgrading from a prior version
+ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
+ALTER TABLE financial_records ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP DEFAULT NULL;
 `;
 
 async function runMigrations() {

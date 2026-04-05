@@ -8,7 +8,7 @@ const getSummary = async (userId, filters = {}) => {
       COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expenses,
       COALESCE(COUNT(*), 0) as total_records
     FROM financial_records 
-    WHERE user_id = $1
+    WHERE user_id = $1 AND deleted_at IS NULL
   `;
   const values = [userId];
   let paramIndex = 2;
@@ -44,7 +44,7 @@ const getCategoryBreakdown = async (userId, filters = {}) => {
       COUNT(*) as count,
       SUM(amount) as total_amount
     FROM financial_records 
-    WHERE user_id = $1
+    WHERE user_id = $1 AND deleted_at IS NULL
   `;
   const values = [userId];
   let paramIndex = 2;
@@ -76,7 +76,7 @@ const getRecentTransactions = async (userId, limit = 10) => {
   const result = await pool.query(
     `SELECT id, amount, type, category, description, transaction_date, created_at 
      FROM financial_records 
-     WHERE user_id = $1 
+     WHERE user_id = $1 AND deleted_at IS NULL
      ORDER BY transaction_date DESC, created_at DESC 
      LIMIT $2`,
     [userId, limit]
@@ -94,6 +94,7 @@ const getMonthlyTrends = async (userId, months = 12) => {
       COUNT(*) as transaction_count
     FROM financial_records
     WHERE user_id = $1 
+      AND deleted_at IS NULL
       AND transaction_date >= CURRENT_DATE - make_interval(months => $2)
     GROUP BY DATE_TRUNC('month', transaction_date)
     ORDER BY month DESC`,
@@ -118,7 +119,7 @@ const getTypeBreakdown = async (userId, filters = {}) => {
       SUM(amount) as total_amount,
       AVG(amount) as average_amount
     FROM financial_records 
-    WHERE user_id = $1
+    WHERE user_id = $1 AND deleted_at IS NULL
   `;
   const values = [userId];
   let paramIndex = 2;

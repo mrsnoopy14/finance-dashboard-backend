@@ -19,20 +19,20 @@ const createRecord = async (userId, amount, type, category, description, transac
   }
 };
 
-// Get record by ID
+// Get record by ID — excludes soft-deleted
 const getRecordById = async (recordId) => {
   const result = await pool.query(
     `SELECT id, user_id, amount, type, category, description, transaction_date, created_at, updated_at 
-     FROM financial_records WHERE id = $1`,
+     FROM financial_records WHERE id = $1 AND deleted_at IS NULL`,
     [recordId]
   );
   return result.rows[0];
 };
 
-// Get user's records with filters
+// Get user's records with filters — excludes soft-deleted
 const getUserRecords = async (userId, filters = {}) => {
   let query = `SELECT id, user_id, amount, type, category, description, transaction_date, created_at, updated_at 
-               FROM financial_records WHERE user_id = $1`;
+               FROM financial_records WHERE user_id = $1 AND deleted_at IS NULL`;
   const values = [userId];
   let paramIndex = 2;
 
@@ -116,10 +116,13 @@ const updateRecord = async (recordId, userId, updates) => {
   return result.rows[0];
 };
 
-// Delete a record
+// Soft delete a record — sets deleted_at instead of removing the row
 const deleteRecord = async (recordId, userId) => {
   const result = await pool.query(
-    `DELETE FROM financial_records WHERE id = $1 AND user_id = $2 RETURNING id`,
+    `UPDATE financial_records 
+     SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+     WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
+     RETURNING id`,
     [recordId, userId]
   );
 
@@ -130,10 +133,10 @@ const deleteRecord = async (recordId, userId) => {
   return { success: true, message: 'Record deleted successfully' };
 };
 
-// Get total count of records for a user
+// Get total count of non-deleted records for a user
 const getRecordCount = async (userId) => {
   const result = await pool.query(
-    'SELECT COUNT(*) as count FROM financial_records WHERE user_id = $1',
+    'SELECT COUNT(*) as count FROM financial_records WHERE user_id = $1 AND deleted_at IS NULL',
     [userId]
   );
   return parseInt(result.rows[0].count);

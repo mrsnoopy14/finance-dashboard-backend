@@ -1,10 +1,32 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
 const app = express();
+
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
+// Global limiter: 100 requests per 15 minutes per IP
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+});
+
+// Auth limiter: stricter — 10 requests per 15 minutes (prevents brute-force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts, please try again later.' },
+});
+
+app.use(globalLimiter);
 
 // Core middleware
 app.use(cors());
@@ -16,7 +38,7 @@ const { authenticateUser } = require('./middleware/auth');
 
 // ─── Public Routes (no auth required) ────────────────────────────────────────
 const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 
 // Health check — also public
 app.get('/health', (req, res) => {
