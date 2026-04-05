@@ -1,15 +1,4 @@
-const { Pool } = require('pg');
-const dotenv = require('dotenv');
-
-dotenv.config();
-
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+const pool = require('./connection');
 
 const schema = `
 -- Users table
@@ -50,13 +39,17 @@ async function runMigrations() {
     console.log('Running database migrations...');
     await pool.query(schema);
     console.log('✓ Database schema created successfully');
-    process.exit(0);
   } catch (error) {
     console.error('✗ Migration failed:', error.message);
-    process.exit(1);
+    throw error;
   }
 }
 
-runMigrations();
+// Allow running directly: node src/db/migrations.js
+if (require.main === module) {
+  runMigrations()
+    .then(() => process.exit(0))
+    .catch(() => process.exit(1));
+}
 
-module.exports = pool;
+module.exports = { runMigrations };

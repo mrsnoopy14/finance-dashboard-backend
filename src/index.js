@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { runMigrations } = require('./db/migrations');
 
 dotenv.config();
 
@@ -58,10 +59,22 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`✓ Server running on port ${PORT}`);
-  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`✓ Auth: JWT (Bearer token)`);
-});
+// Auto-run migrations then start server
+// This ensures DB tables exist before accepting any requests (important for Railway)
+async function startServer() {
+  try {
+    await runMigrations();
+    app.listen(PORT, () => {
+      console.log(`✓ Server running on port ${PORT}`);
+      console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`✓ Auth: JWT (Bearer token)`);
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 module.exports = app;
